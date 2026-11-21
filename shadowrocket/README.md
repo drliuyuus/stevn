@@ -1,35 +1,40 @@
-# Shadowrocket v10 — Gemini 地区限制修复
+# Shadowrocket — Gemini 修复
 
-## 改了什么
+## 用哪个
 
-相对 `shadowrocket_v9_68fe.conf`：
+**请用 `shadowrocket_v11_gemini.conf`**（修了 v10 的 1002）。
 
-1. **防 QUIC 泄漏**：`udp-policy-not-supported-behaviour = REJECT`  
-   Google/Gemini 大量走 HTTP/3。节点不支持 UDP 时若 UDP 直连，真实国内 IP 会暴露，直接弹 *isn't available in this country*。
-2. **AI 出口改固定**：`AI` 从 `url-test` 改为 `select`，默认钉自建美区，避免自动换 IP 触发风控。
-3. **补全 Gemini / Google AI 域名**，并把 `google.com` / `googleapis.com` / `gstatic.com` 等钉到 `AI`（美国），避免漏到直连或非美区。
+| 版本 | 现象 |
+|------|------|
+| v9 | 地区不可用（域名不全 / 可能换 IP） |
+| v10 | 1002 连不上（`AI=select` 不切换 + UDP REJECT 过严） |
+| **v11** | `AI=fallback` + 去掉 UDP REJECT + 保留补全域名 |
+
+## v11 要点
+
+1. `AI` 用 **fallback**：自建美区优先，挂了自动切，避免整站 Google 1002  
+2. **去掉** `udp-policy-not-supported-behaviour = REJECT`（Gemini iOS 对 QUIC 回落差）  
+3. 请在节点上开 **UDP 转发**，让 QUIC 走代理  
+4. 保留 Gemini/Google 域名钉美国 `AI`
 
 ## 小火箭怎么用
 
-1. 把 `shadowrocket_v10_gemini.conf` 传到手机，用 Shadowrocket **打开/导入**。
-2. **配置 → 选中该配置 → 启用**。
-3. 首页 **全局路由 = 配置**（不要用「代理」或「直连」）。
-4. 打开策略组 **AI**，手动选 **Vmiss-443** 或 **Zoro-VLESS**（自建美区），不要用订阅里脏的美国 IP。
-5. 确认节点开启 **UDP 转发**（Reality / VLESS / Hy2 一般可以）。
-6. 强杀 Gemini App → 重新打开；用 Safari 打开 `https://gemini.google.com` 试一次。
+1. 导入并启用 `shadowrocket_v11_gemini.conf`（和 v9 同一 uploads 目录）  
+2. 全局路由 = **配置**  
+3. 确认自建节点（Vmiss / Zoro）测速能通，并开 **UDP 转发**  
+4. 强杀 Gemini 再开  
+5. Safari 打开 `https://ipinfo.io` 确认非 CN；再试 `https://gemini.google.com`
 
-## 若仍弹地区不可用
+## 若还不行
 
-按概率排查：
-
-1. Safari 打开 `https://ipinfo.io`，确认是美国（或至少非 CN）。
-2. Google 账号若是中国区注册/中国付款档案，App 仍可能拦——换支持地区账号，或只用网页版试。
-3. 订阅美国节点 IP 被标记时，只保留自建 Reality。
-4. iOS「本地网络 / VPN」权限正常；小火箭连上且隧道图标在。
+- **仍 1002**：小火箭里看 `AI` 当前节点是否超时；先手动连 Vmiss-443 测连通  
+- **又变地区不可用**：账号中国区可能性大；或节点 IP 被标，只留自建 Reality  
+- 网页能开、App 不行：优先换支持地区 Google 账号
 
 ## 文件
 
 | 文件 | 说明 |
 |------|------|
-| `shadowrocket_v10_gemini.conf` | 可导入的修复版 |
-| `shadowrocket_v9_68fe.conf.bak` | 你上传的原版备份 |
+| `shadowrocket_v11_gemini.conf` | **当前推荐** |
+| `shadowrocket_v10_gemini.conf` | 已弃用（易 1002） |
+| `shadowrocket_v9_68fe.conf.bak` | 原版备份 |
